@@ -2,9 +2,12 @@
   "name": "assignment-server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon . & npm run scss",
+    "scss": "sass --watch src/scss/custom.scss public/css/custom.css", 
+    "start": "node src/app.js"
+  },
   },
   "keywords": [],
   "author": "",
