@@ -8,7 +8,6 @@
     "scss": "sass --watch src/scss/custom.scss public/css/custom.css", 
     "start": "node src/app.js"
   },
-  },
   "keywords": [],
   "author": "",
   "license": "ISC"
