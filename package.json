@@ -1,14 +1,27 @@
 {
   "name": "assignment-server",
   "version": "1.0.0",
-  "description": "",
-  "main": "src/index.js",
+  "description": "Git repository for CAB432 Assignment for EM",
+  "main": "src/app.js",
   "scripts": {
     "dev": "nodemon . & npm run scss",
-    "scss": "sass --watch src/scss/custom.scss public/css/custom.css", 
+    "scss": "sass --watch src/scss/custom.scss public/css/custom.css",
     "start": "node src/app.js"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EwanManley/n11634448-Assignment-EM.git"
+  },
+  "bugs": {
+    "url": "https://github.com/EwanManley/n11634448-Assignment-EM/issues"
+  },
+  "homepage": "https://github.com/EwanManley/n11634448-Assignment-EM#readme",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.864.0",
+    "@aws-sdk/s3-request-presigner": "^3.864.0",
+    "dotenv": "^17.2.1"
+  }
 }
