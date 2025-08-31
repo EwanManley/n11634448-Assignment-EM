@@ -3,31 +3,61 @@ const multer = require('multer')
 const ffmpeg = require('fluent-ffmpeg')
 const path = require('path')
 const fs = require('fs')
+const authenticateToken = require('./midAuth')
 const AWS = require('aws-sdk')
 const { v4: uuidv4 } = require('uuid')
 const jwt = require('jsonwebtoken')
 const bodyParser = require('body-parser')
-const { verifyLogin } = require('./userm')
+const { verifyLogin, registerUser } = require('./userm')
 
 const app = express()
 const SECRET = 'supersecretkey'
+const upload = multer({ dest: 'uploads/' })
+const s3 = new AWS.S3({ region: 'ap-southeast-2' })
+const BUCKET_NAME = 'n11634448-vt-output'
 
 app.use(express.json())
 app.use(bodyParser.json())
-
-const upload = multer({ dest: 'uploads/' })
-
 app.use('/outputs', express.static('/app/outputs'))
 app.use(express.static(path.join(__dirname, '..')))
-
-const s3 = new AWS.S3({ region: 'ap-southeast-2' })
-const BUCKET_NAME = 'n11634448-vt-output'
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../index.html'))
 })
 
-app.get('/generate-upload-url', async (req, res) => {
+app.post('/api/register', (req, res) => {
+    const { username, password, role } = req.body
+    if (!username || !password || !role) {
+        return res.status(400).json({ error: 'All fields are required' })
+    }
+
+    const success = registerUser(username, password, role)
+    if (!success) {
+        return res.status(500).json({ error: 'Registration failed' })
+    }
+
+    res.json({ message: 'Registration successful' })
+})
+
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body
+    const user = verifyLogin(username, password)
+
+    if (!user) {
+        return res.status(401).json({ error: 'Invalid username or password' })
+    }
+
+    const payload = {
+        id: user.id,
+        username: user.username,
+        role: user.role
+    }
+
+    const token = jwt.sign(payload, SECRET, { expiresIn: '1h' })
+    res.json({ token })
+})
+
+app.get('/api/generate-upload-url', async (req, res) => {
     const fileName = `uploads/${uuidv4()}.webm`
 
     const params = {
@@ -46,7 +76,7 @@ app.get('/generate-upload-url', async (req, res) => {
     }
 })
 
-app.post('/transcode', upload.single('video'), async (req, res) => {
+app.post('/api/transcode', authenticateToken, upload.single('video'), async (req, res) => {
     const inputPath = req.file.path
     const bitrate = req.body.bitrate || '192k'
     const outputFilename = `output-${Date.now()}.mp3`
@@ -92,25 +122,6 @@ app.post('/transcode', upload.single('video'), async (req, res) => {
             res.status(500).json({ error: 'Transcoding failed', details: err.message })
         })
         .save(outputPath)
-})
-
-app.post('/login', (req, res) => {
-    const { username, password } = req.body
-    const user = verifyLogin(username, password)
-
-    if (!user) {
-        return res.status(401).json({ error: 'Invalid username or password' })
-    }
-
-    const payload = {
-        id: user.id,
-        username: user.username,
-        role: user.role
-    }
-
-    const token = jwt.sign(payload, SECRET, { expiresIn: '1h' })
-
-    res.json({ token })
 })
 
 module.exports = app
