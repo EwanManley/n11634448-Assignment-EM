@@ -84,56 +84,79 @@ app.get('/api/generate-upload-url', async (req, res) => {
 })
 
 app.post('/api/transcode', authenticateToken, upload.single('video'), async (req, res) => {
-  const inputPath = req.file.path
-  const bitrate = req.body.bitrate || '192k'
-  const outputFilename = `output-${Date.now()}.mp3`
-  const outputPath = path.join('outputs', outputFilename)
-  const s3Key = `outputs/${outputFilename}`
+  const inputPath = req.file.path;
+  const bitrate = req.body.bitrate || '192k';
+  const format = req.body.format || 'mp3';
 
-  fs.mkdirSync('outputs', { recursive: true })
+  const ext = format === 'mp4' ? '.mp4' : '.mp3';
+  const outputFilename = `output-${Date.now()}${ext}`;
+  const outputPath = path.join('outputs', outputFilename);
+  const s3Key = `outputs/${outputFilename}`;
 
-  ffmpeg(inputPath)
-    .format('mp3')
-    .audioBitrate(bitrate)
-    .noVideo()
+  fs.mkdirSync('outputs', { recursive: true });
+
+  let command = ffmpeg(inputPath);
+
+  if (format === 'mp3') {
+    command = command
+      .format('mp3')
+      .audioBitrate(bitrate)
+      .noVideo();
+  } else if (format === 'mp4') {
+    command = command
+      .format('mp4')
+      .videoCodec('libx264')
+      .audioCodec('aac')
+      .outputOptions('-preset veryfast');
+  } else {
+    return res.status(400).json({ error: 'Unsupported format' });
+  }
+
+  command
     .on('end', async () => {
       try {
-        const fileContent = fs.readFileSync(outputPath)
+        const fileContent = fs.readFileSync(outputPath);
 
         await s3.upload({
           Bucket: BUCKET_NAME,
           Key: s3Key,
           Body: fileContent,
-          ContentType: 'audio/mpeg'
-        }).promise()
+          ContentType: format === 'mp4' ? 'video/mp4' : 'audio/mpeg'
+        }).promise();
 
-		const originalName = path.parse(req.file.originalname).name;
+        const originalName = path.parse(req.file.originalname).name;
 
-		const downloadUrl = await s3.getSignedUrlPromise('getObject', {
-		  Bucket: BUCKET_NAME,
-		  Key: s3Key,
-		  Expires: 3600,
-		  ResponseContentDisposition: `attachment; filename="${originalName}.mp3"`
-		});
+        const downloadUrl = await s3.getSignedUrlPromise('getObject', {
+          Bucket: BUCKET_NAME,
+          Key: s3Key,
+          Expires: 3600,
+          ResponseContentDisposition: `attachment; filename="${originalName}${ext}"`
+        });
+
+        // Cleanup local files
+        fs.unlinkSync(inputPath);
+        fs.unlinkSync(outputPath);
 
         res.json({
-		  message: 'Conversion complete',
-		  file: outputFilename,
-		  download: downloadUrl,
-		  suggestedName: `${originalName}.mp3`
-		});
-
+          message: 'Conversion complete',
+          file: outputFilename,
+          download: downloadUrl,
+          suggestedName: `${originalName}${ext}`
+        });
       } catch (err) {
-        console.error('Upload or URL Error:', err)
-        res.status(500).json({ error: 'Upload to S3 failed', details: err.message })
+        fs.existsSync(inputPath) && fs.unlinkSync(inputPath);
+        fs.existsSync(outputPath) && fs.unlinkSync(outputPath);
+        console.error('Upload or URL Error:', err);
+        res.status(500).json({ error: 'Upload to S3 failed', details: err.message });
       }
     })
     .on('error', err => {
-      console.error('FFmpeg Error:', err)
-      res.status(500).json({ error: 'Transcoding failed', details: err.message })
+      fs.existsSync(inputPath) && fs.unlinkSync(inputPath);
+      console.error('FFmpeg Error:', err);
+      res.status(500).json({ error: 'Transcoding failed', details: err.message });
     })
-    .save(outputPath)
-})
+    .save(outputPath);
+});
 
 app.get('/api/downloads', authenticateToken, async (req, res) => {
   try {

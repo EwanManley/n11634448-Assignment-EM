@@ -119,13 +119,20 @@
       <h2>Upload Video</h2>
       <form id="upload-form" enctype="multipart/form-data">
         <input type="file" id="video" name="video" accept="video/*" required />
-        <label for="bitrate">Select Audio Quality:</label>
-        <select id="bitrate" name="bitrate">
-          <option value="128k">128 kbps</option>
-          <option value="192k" selected>192 kbps</option>
-          <option value="320k">320 kbps</option>
+        <label for="format">Select Output Format:</label>
+        <select id="format" name="format">
+          <option value="mp3">MP3</option>
+          <option value="mp4">MP4</option>
         </select>
-        <button type="submit">Convert to MP3</button>
+        <div id="bitrate-section">
+          <label for="bitrate">Select Audio Quality:</label>
+          <select id="bitrate" name="bitrate">
+            <option value="128k">128 kbps</option>
+            <option value="192k" selected>192 kbps</option>
+            <option value="320k">320 kbps</option>
+          </select>
+        </div>
+        <button type="submit">Convert</button>
       </form>
       <p id="upload-status"></p>
       <p id="download-link"></p>
@@ -184,6 +191,7 @@
     document.getElementById('upload-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const file = document.getElementById('video').files[0];
+      const format = document.getElementById('format').value;
       const bitrate = document.getElementById('bitrate').value;
       const status = document.getElementById('upload-status');
       const link = document.getElementById('download-link');
@@ -192,7 +200,8 @@
 
       const formData = new FormData();
       formData.append('video', file);
-      formData.append('bitrate', bitrate);
+      formData.append('format', format);
+      if (format === 'mp3') formData.append('bitrate', bitrate);
 
       const res = await fetch('/api/transcode', {
         method: 'POST',
@@ -206,12 +215,19 @@
 
       if (res.ok) {
         status.innerText = data.message;
-		link.innerHTML = `<a href="${data.download}" download="${data.suggestedName}">Download MP3</a>`;
+        link.innerHTML = `<a href="${data.download}" download="${data.suggestedName}">Download ${data.suggestedName}</a>`;
         fetchDownloadList();
       } else {
         status.innerText = data.error || 'Upload failed';
       }
     });
+
+    document.getElementById('format').addEventListener('change', () => {
+      const format = document.getElementById('format').value;
+      const bitrateSection = document.getElementById('bitrate-section');
+      bitrateSection.style.display = (format === 'mp3') ? 'block' : 'none';
+    });
+    document.getElementById('format').dispatchEvent(new Event('change'));
 
     async function fetchDownloadList() {
       const res = await fetch('/api/downloads', {
