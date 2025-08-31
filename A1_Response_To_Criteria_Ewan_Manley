@@ -1,0 +1,80 @@
+Assignment 1 - REST API Project - Response to Criteria
+================================================
+
+Overview
+------------------------------------------------
+
+- **Name:** Ewan Manley
+- **Student number:** n11634448
+- **Application name:** Video-Transcoder
+- **Two line description:** This REST API provides a video transcoding service with two log in functions, the video transcoder
+- can transcode files into either MP3 or MP4, and when using the MP3 option, can change the audio quality.
+
+
+Core criteria
+------------------------------------------------
+
+### Containerise the app
+
+- **ECR Repository name:** n11634448-a1repo
+- **Video timestamp:** 0:00 and 0:29
+- **Relevant files:** 
+    - /Dockerfile
+
+### Deploy the container
+
+- **EC2 instance ID:** i-0c12e7562d5236aeb
+- **Video timestamp:** 0:12
+
+### User login
+
+- **One line description:** Log in and sign up functionality for users and admin users. Uses JWT for sessions.
+- **Video timestamp:** 0:59
+- **Relevant files:**
+    - /register
+    - /admin-register
+
+### REST API
+
+- **One line description:** REST API using endpoints and HTTP methods (GET, POST, DELETE), returns appropriate status codes and JSON responses for user authentication, video uploads, transcoding, file listing, and deletion.
+- **Video timestamp:** 1:05, 1:26, 2:20
+- **Relevant files:**
+    - /app.js
+    - /userm.js
+    - /midAuth.js
+
+Two kinds of Data
+
+#### First kind
+
+- **One line description:** User log in and roles
+- **Type:** Structured
+- **Rationale:** Verifies access, gives access to role-based features
+- **Video timestamp:** 1:14 and 2:10
+- **Relevant files:**
+    - /userm.js
+    - /users.db
+
+#### Second kind
+
+- **One line description:** Transcoded video and audio files (MP4/MP3)
+- **Type:** Unstructured
+- **Rationale:** Uploaded by users and stored in S3 for scalability, database isn't suitable
+- **Video timestamp:** 1:29
+- **Relevant files:**
+  - /app.js
+
+### CPU intensive task
+
+ **One line description:** Uses FFmpeg to transcode video and audio files into MP3 or MP4, which can be intensive for the CPU
+- **Video timestamp:** 3:09 and 3:26
+- **Relevant files:**
+    - /app.js
+
+### CPU load testing
+
+ **One line description:** Uploaded a 40 minute video, which caused a CPU spike, observed in HTOP and via AWS cpu monitoring.
+- **Video timestamp:** 3:01, 3:09 and 3:26
+- **Relevant files:**
+    - /upload.html
+    - /app.js
