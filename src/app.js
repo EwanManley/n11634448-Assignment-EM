@@ -107,20 +107,21 @@ app.post('/api/transcode', authenticateToken, upload.single('video'), async (req
           ContentType: 'audio/mpeg'
         }).promise()
 
-        const downloadUrl = await s3.getSignedUrlPromise('getObject', {
-          Bucket: BUCKET_NAME,
-          Key: s3Key,
-          Expires: 3600
-        })
+		const originalName = path.parse(req.file.originalname).name;
 
-        const originalName = path.parse(req.file.originalname).name;
-
+		const downloadUrl = await s3.getSignedUrlPromise('getObject', {
+		  Bucket: BUCKET_NAME,
+		  Key: s3Key,
+		  Expires: 3600,
+		  ResponseContentDisposition: `attachment; filename="${originalName}.mp3"`
+		});
+		  
         res.json({
-	  message: 'Conversion complete',
-	  file: outputFilename,
-	  download: downloadUrl,
-	  suggestedName: `${originalName}.mp3`
-        });
+		  message: 'Conversion complete',
+		  file: outputFilename,
+		  download: downloadUrl,
+		  suggestedName: `${originalName}.mp3`
+		});
 
       } catch (err) {
         console.error('Upload or URL Error:', err)
