@@ -1,20 +1,15 @@
-# Use official Node.js 18 image as base
-FROM node:18
+FROM node:18-bullseye
 
-# Create app directory
-WORKDIR /usr/src/app
+RUN apt-get update && \
+    apt-get install -y ffmpeg && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+WORKDIR /app
 
-# Install app dependencies
-RUN npm install --omit=dev
-
-# Bundle app source
 COPY . .
 
-# Expose port
-EXPOSE 3000
+RUN npm install
 
-# Start the app
-CMD ["npm", "start"]
+EXPOSE 3000
+CMD ["node", "index.js"]

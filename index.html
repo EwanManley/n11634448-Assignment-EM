@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video to MP3 Transcoder</title>
+</head>
+<body>
+    <h1>Upload Video</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" name="video" accept="video/*" required><br><br>
+    <label for="bitrate">Select Audio Quality:</label>
+    <select name="bitrate">
+        <option value="128k">128 kbps</option>
+        <option value="192k" selected>192 kbps</option>
+        <option value="320k">320 kbps</option>
+    </select><br><br>
+    <button type="submit">Convert to MP3</button>
+</form>
+
+<progress id="progressBar" value="0" max="100" style="width:300px; display:none;"></progress>
+<div id="result"></div>
+
+<script>
+document.getElementById('uploadForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const progressBar = document.getElementById('progressBar');
+    const resultDiv = document.getElementById('result');
+
+    progressBar.style.display = 'block';
+    resultDiv.innerHTML = '';
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/transcode', true);
+
+    xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable) {
+            const percent = (e.loaded / e.total) * 100;
+            progressBar.value = percent;
+        }
+    };
+
+    xhr.onload = function () {
+        progressBar.style.display = 'none';
+        if (xhr.status === 200) {
+            const res = JSON.parse(xhr.responseText);
+            resultDiv.innerHTML = `<p><strong>Conversion complete:</strong> <a href="${res.download}" target="_blank">Click here to download</a></p>`;
+        } else {
+            resultDiv.innerHTML = `<p style="color:red;">Conversion failed: ${xhr.responseText}</p>`;
+        }
+    };
+
+    xhr.send(formData);
+});
+</script>
+</body>
+</html>
