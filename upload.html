@@ -206,7 +206,7 @@
 
       if (res.ok) {
         status.innerText = data.message;
-	link.innerHTML = `<a href="${data.download}" download>Download MP3</a>`;
+	link.innerHTML = `<a href="${data.download}" download="${data.suggestedName}">Download MP3</a>`;
         fetchDownloadList();
       } else {
         status.innerText = data.error || 'Upload failed';

@@ -113,11 +113,14 @@ app.post('/api/transcode', authenticateToken, upload.single('video'), async (req
           Expires: 3600
         })
 
+        const originalName = path.parse(req.file.originalname).name;
+
         res.json({
-          message: 'Conversion complete',
-          file: outputFilename,
-          download: downloadUrl
-        })
+	  message: 'Conversion complete',
+	  file: outputFilename,
+	  download: downloadUrl,
+	  suggestedName: `${originalName}.mp3`
+        });
 
       } catch (err) {
         console.error('Upload or URL Error:', err)
