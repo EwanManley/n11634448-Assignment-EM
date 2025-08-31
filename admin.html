@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Panel</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f7f7f7;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .card {
+      background-color: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      background-color: #333;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 10px 0;
+    }
+
+    button:hover {
+      background-color: #555;
+    }
+
+    .file-list {
+      display: none;
+      margin-top: 20px;
+      text-align: left;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .file-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 6px 0;
+      padding: 6px;
+      background-color: #f1f1f1;
+      border-radius: 5px;
+    }
+
+    .link-group {
+      margin-top: 20px;
+    }
+
+    .link-group a {
+      display: inline-block;
+      margin: 0 10px;
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .link-group a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h2>Admin Panel</h2>
+      <button id="toggle-files-btn">Show Files</button>
+      <div class="file-list" id="file-list"></div>
+
+      <div class="link-group">
+        <a href="/">Back to Home</a>
+        <a href="#" id="logout-btn">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      location.href = '/upload.html';
+    }
+
+    const toggleBtn = document.getElementById('toggle-files-btn');
+    const fileListDiv = document.getElementById('file-list');
+
+    toggleBtn.addEventListener('click', async () => {
+      if (fileListDiv.style.display === 'none' || fileListDiv.style.display === '') {
+        const res = await fetch('/api/downloads', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const data = await res.json();
+        fileListDiv.innerHTML = '';
+
+        if (res.ok && Array.isArray(data.files)) {
+          data.files.forEach(file => {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.innerHTML = `
+              <span>${file.name}</span>
+              <button onclick="deleteFile('${file.name}')">Delete</button>
+            `;
+            fileListDiv.appendChild(item);
+          });
+        } else {
+          fileListDiv.innerHTML = '<p>No files found or failed to fetch.</p>';
+        }
+
+        fileListDiv.style.display = 'block';
+        toggleBtn.textContent = 'Hide Files';
+      } else {
+        fileListDiv.style.display = 'none';
+        toggleBtn.textContent = 'Show Files';
+      }
+    });
+
+    async function deleteFile(filename) {
+      if (!confirm(`Are you sure you want to delete ${filename}?`)) return;
+
+      const res = await fetch(`/api/delete/${filename}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        alert('File deleted');
+        toggleBtn.click(); // refresh list
+      } else {
+        alert('Failed to delete file');
+      }
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      location.href = '/upload.html';
+    });
+  </script>
+</body>
+</html>

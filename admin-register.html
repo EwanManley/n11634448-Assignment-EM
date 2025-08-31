@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Registration</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f7f7f7;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .card {
+      background-color: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #333;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #555;
+    }
+
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+
+    .link-group {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h2>Admin Registration</h2>
+      <form id="admin-register-form">
+        <input type="text" id="username" placeholder="Username" required />
+        <input type="password" id="password" placeholder="Password" required />
+        <input type="text" id="admin-key" placeholder="Admin Key" required />
+        <button type="submit">Register as Admin</button>
+      </form>
+      <p id="register-error" class="error"></p>
+      <div class="link-group">
+        <a href="/register.html">Back to Register</a>
+        <a href="/">Back to Home</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('admin-register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const adminKey = document.getElementById('admin-key').value;
+
+      const res = await fetch('/api/admin-register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, key: adminKey })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert('Admin registered successfully!');
+        window.location.href = '/upload.html';
+      } else {
+        document.getElementById('register-error').innerText = data.error || 'Registration failed';
+      }
+    });
+  </script>
+</body>
+</html>
