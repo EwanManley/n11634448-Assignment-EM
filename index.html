@@ -94,7 +94,7 @@
 
       if (response.ok) {
         localStorage.setItem('token', result.token);
-        window.location.href = '/upload.html'; // adjust this route to your protected page
+        window.location.href = '/upload.html';
       } else {
         alert(result.error || 'Login failed');
       }
