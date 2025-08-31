@@ -32,7 +32,7 @@
       margin-bottom: 20px;
     }
 
-    input, select, button {
+    input, button {
       width: 100%;
       padding: 12px;
       margin: 8px 0;
@@ -57,14 +57,16 @@
       margin-top: 10px;
     }
 
+    .center-text {
+      margin-top: 10px;
+    }
+
     .link-group {
-      margin-top: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+      margin-top: 20px;
     }
 
     .link-group a {
+      margin: 0 10px;
       color: #007bff;
       text-decoration: none;
     }
@@ -81,13 +83,12 @@
       <form id="register-form">
         <input type="text" id="username" placeholder="Username" required />
         <input type="password" id="password" placeholder="Password" required />
-        <select id="role" required>
-          <option value="" disabled selected>Select Role</option>
-          <option value="user">User</option>
-          <option value="admin">Admin</option>
-        </select>
+        <input type="hidden" id="role" value="user" />
         <button type="submit">Create Account</button>
       </form>
+
+      <p class="center-text">Want to register as an admin? <a href="/admin-register.html">Click here</a></p>
+
       <p id="register-error" class="error"></p>
       <div class="link-group">
         <a href="/upload.html">Back to Login</a>
@@ -97,8 +98,9 @@
   </div>
 
   <script>
-    document.getElementById('register-form').addEventListener('submit', async (e) => {
+    document.getElementById('register-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
+
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
       const role = document.getElementById('role').value;
@@ -112,20 +114,8 @@
       const data = await res.json();
 
       if (res.ok) {
-        const loginRes = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-
-        const loginData = await loginRes.json();
-
-        if (loginRes.ok) {
-          localStorage.setItem('token', loginData.token);
-          window.location.href = '/upload.html';
-        } else {
-          document.getElementById('register-error').innerText = loginData.error || 'Login after registration failed';
-        }
+        alert('Registration successful! You can now log in.');
+        location.href = '/upload.html';
       } else {
         document.getElementById('register-error').innerText = data.error || 'Registration failed';
       }

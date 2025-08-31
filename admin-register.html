@@ -58,16 +58,24 @@
     }
 
     .link-group {
-      display: flex;
-      justify-content: space-between;
       margin-top: 20px;
+    }
+
+    .link-group a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: #007bff;
+    }
+
+    .link-group a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="card">
-      <h2>Admin Registration</h2>
+      <h2>Register as Admin</h2>
       <form id="admin-register-form">
         <input type="text" id="username" placeholder="Username" required />
         <input type="password" id="password" placeholder="Password" required />
@@ -76,34 +84,42 @@
       </form>
       <p id="register-error" class="error"></p>
       <div class="link-group">
-        <a href="/register.html">Back to Register</a>
+        <a href="/register.html">Back to User Registration</a>
         <a href="/">Back to Home</a>
       </div>
     </div>
   </div>
 
   <script>
-    document.getElementById('admin-register-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-      const adminKey = document.getElementById('admin-key').value;
+    document.getElementById('admin-register-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault()
 
-      const res = await fetch('/api/admin-register', {
+      const username = document.getElementById('username').value
+      const password = document.getElementById('password').value
+      const adminKey = document.getElementById('admin-key').value
+      const error = document.getElementById('register-error')
+
+      const HARD_KEY = 'XUcAHT9CNx2073pLGmZ12OB9bHhrg5Uy'
+      if (adminKey !== HARD_KEY) {
+        error.innerText = 'Invalid admin key'
+        return
+      }
+
+      const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, key: adminKey })
-      });
+        body: JSON.stringify({ username, password, role: 'admin', adminKey })
+      })
 
-      const data = await res.json();
+      const data = await res.json()
 
       if (res.ok) {
-        alert('Admin registered successfully!');
-        window.location.href = '/upload.html';
+        alert('Admin registration successful. You can now log in.')
+        window.location.href = '/upload.html'
       } else {
-        document.getElementById('register-error').innerText = data.error || 'Registration failed';
+        error.innerText = data.error || 'Registration failed'
       }
-    });
+    })
   </script>
 </body>
 </html>

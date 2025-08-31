@@ -88,6 +88,18 @@
     .admin-controls button:hover {
       background-color: #c00;
     }
+
+    #admin-link {
+      display: none;
+      margin-top: 10px;
+      color: #007bff;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    #admin-link:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -121,6 +133,7 @@
         <h3>Recent Downloads</h3>
         <ul id="download-list"></ul>
       </div>
+      <a href="/admin.html" id="admin-link">Go to Admin Dashboard</a>
       <button id="logout-btn">Logout</button>
     </div>
   </div>
@@ -129,9 +142,15 @@
     const token = localStorage.getItem('token');
     const loginSection = document.getElementById('login-section');
     const uploadSection = document.getElementById('upload-section');
+
     if (token) {
       uploadSection.style.display = 'block';
       fetchDownloadList();
+
+      const tokenData = JSON.parse(atob(token.split('.')[1]));
+      if (tokenData.role === 'admin') {
+        document.getElementById('admin-link').style.display = 'inline-block';
+      }
     } else {
       loginSection.style.display = 'block';
     }
@@ -187,7 +206,7 @@
 
       if (res.ok) {
         status.innerText = data.message;
-        link.innerHTML = `<a href="${data.download}" target="_blank">Download MP3</a>`;
+	link.innerHTML = `<a href="${data.download}" download>Download MP3</a>`;
         fetchDownloadList();
       } else {
         status.innerText = data.error || 'Upload failed';
