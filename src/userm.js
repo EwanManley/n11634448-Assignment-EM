@@ -1,52 +1,36 @@
-const fs = require('fs');
-const path = require('path');
-const bcrypt = require('bcrypt');
+async function registerUser(username, password, role) {
+    const existing = await ddb.send(new GetCommand({
+        TableName: TABLE_NAME,
+        Key: {
+            pk: `user#${username}`,
+            sk: 'profile'
+        }
+    }));
 
-const USERS_FILE = path.join(__dirname, 'users.json');
-
-function readUsers() {
-    if (!fs.existsSync(USERS_FILE)) {
-        fs.writeFileSync(USERS_FILE, '[]');
-    }
-
-    const data = fs.readFileSync(USERS_FILE, 'utf8');
-    return JSON.parse(data);
-}
-
-function writeUsers(users) {
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-}
-
-function verifyLogin(username, password) {
-    const users = readUsers();
-    const user = users.find(u => u.username === username);
-    if (user && bcrypt.compareSync(password, user.password)) {
-        return user;
-    }
-    return null;
-}
-
-function registerUser(username, password, role) {
-    const users = readUsers();
-
-    if (users.find(u => u.username === username)) {
+    if (existing.Item) {
         return false;
     }
 
     const hashedPassword = bcrypt.hashSync(password, 10);
-    const newUser = {
-        id: users.length + 1,
+    const userItem = {
+        pk: `user#${username}`,
+        sk: 'profile',
+        'qut-username': QUT_USERNAME,
+        id: Date.now(),
         username,
         password: hashedPassword,
         role
     };
 
-    users.push(newUser);
-    writeUsers(users);
-    return true;
+    try {
+        const putResult = await ddb.send(new PutCommand({
+            TableName: TABLE_NAME,
+            Item: userItem
+        }));
+        console.log('DynamoDB PutCommand result:', putResult);
+        return true;
+    } catch (err) {
+        console.error('DynamoDB PutCommand ERROR:', err);
+        return false;
+    }
 }
-
-module.exports = {
-    verifyLogin,
-    registerUser
-};
