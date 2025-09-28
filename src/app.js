@@ -26,24 +26,35 @@ app.get('/', (req, res) => {
 })
 
 app.post('/api/register', async (req, res) => {
-  const { username, password, role, adminKey } = req.body
-
-  if (!username || !password || !role) {
-    return res.status(400).json({ error: 'All fields are required' })
+  const { username, password } = req.body
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required' })
   }
 
-  if (role === 'admin') {
-    if (adminKey !== 'XUcAHT9CNx2073pLGmZ12OB9bHhrg5Uy') {
-      return res.status(403).json({ error: 'Invalid admin registration key' })
-    }
-  }
-
-  const success = await registerUser(username, password, role)
+  const success = await registerUser(username, password, 'user')
   if (!success) {
     return res.status(500).json({ error: 'Registration failed' })
   }
 
   res.json({ message: 'Registration successful' })
+})
+
+app.post('/api/register-admin', async (req, res) => {
+  const { username, password, adminKey } = req.body
+  if (!username || !password || !adminKey) {
+    return res.status(400).json({ error: 'Username, password, and admin key are required' })
+  }
+
+  if (adminKey !== 'XUcAHT9CNx2073pLGmZ12OB9bHhrg5Uy') {
+    return res.status(403).json({ error: 'Invalid admin registration key' })
+  }
+
+  const success = await registerUser(username, password, 'admin')
+  if (!success) {
+    return res.status(500).json({ error: 'Registration failed' })
+  }
+
+  res.json({ message: 'Admin registration successful' })
 })
 
 app.post('/api/login', async (req, res) => {
@@ -97,16 +108,9 @@ app.post('/api/transcode', authenticateToken, upload.single('video'), async (req
   let command = ffmpeg(inputPath)
 
   if (format === 'mp3') {
-    command = command
-      .format('mp3')
-      .audioBitrate(bitrate)
-      .noVideo()
+    command = command.format('mp3').audioBitrate(bitrate).noVideo()
   } else if (format === 'mp4') {
-    command = command
-      .format('mp4')
-      .videoCodec('libx264')
-      .audioCodec('aac')
-      .outputOptions('-preset veryfast')
+    command = command.format('mp4').videoCodec('libx264').audioCodec('aac').outputOptions('-preset veryfast')
   } else {
     return res.status(400).json({ error: 'Unsupported format' })
   }
@@ -187,10 +191,7 @@ app.delete('/api/delete/:filename', authenticateToken, (req, res) => {
 
   const key = `outputs/${req.params.filename}`
 
-  s3.deleteObject({
-    Bucket: BUCKET_NAME,
-    Key: key
-  }, (err) => {
+  s3.deleteObject({ Bucket: BUCKET_NAME, Key: key }, (err) => {
     if (err) {
       return res.status(500).json({ error: 'Failed to delete', details: err.message })
     }

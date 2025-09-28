@@ -10,14 +10,12 @@
       background-color: #f7f7f7;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     }
-
     .container {
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
     }
-
     .card {
       background-color: white;
       padding: 40px;
@@ -27,11 +25,9 @@
       max-width: 400px;
       text-align: center;
     }
-
     h2 {
       margin-bottom: 20px;
     }
-
     input, button {
       width: 100%;
       padding: 12px;
@@ -40,37 +36,30 @@
       border-radius: 6px;
       font-size: 16px;
     }
-
     button {
       background-color: #333;
       color: white;
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
-
     button:hover {
       background-color: #555;
     }
-
     .error {
       color: red;
       margin-top: 10px;
     }
-
     .center-text {
       margin-top: 10px;
     }
-
     .link-group {
       margin-top: 20px;
     }
-
     .link-group a {
       margin: 0 10px;
       color: #007bff;
       text-decoration: none;
     }
-
     .link-group a:hover {
       text-decoration: underline;
     }
@@ -83,12 +72,9 @@
       <form id="register-form">
         <input type="text" id="username" placeholder="Username" required />
         <input type="password" id="password" placeholder="Password" required />
-        <input type="hidden" id="role" value="user" />
         <button type="submit">Create Account</button>
       </form>
-
       <p class="center-text">Want to register as an admin? <a href="/admin-register.html">Click here</a></p>
-
       <p id="register-error" class="error"></p>
       <div class="link-group">
         <a href="/upload.html">Back to Login</a>
@@ -100,24 +86,26 @@
   <script>
     document.getElementById('register-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
-      const role = document.getElementById('role').value;
 
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, role })
-      });
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (res.ok) {
-        alert('Registration successful! You can now log in.');
-        location.href = '/upload.html';
-      } else {
-        document.getElementById('register-error').innerText = data.error || 'Registration failed';
+        if (res.ok) {
+          alert('Registration successful! You can now log in.');
+          location.href = '/upload.html';
+        } else {
+          document.getElementById('register-error').innerText = data.error || 'Registration failed';
+        }
+      } catch (err) {
+        document.getElementById('register-error').innerText = 'Network error occurred.';
       }
     });
   </script>

@@ -153,7 +153,6 @@
     if (token) {
       uploadSection.style.display = 'block';
       fetchDownloadList();
-
       const tokenData = JSON.parse(atob(token.split('.')[1]));
       if (tokenData.role === 'admin') {
         document.getElementById('admin-link').style.display = 'inline-block';
@@ -227,6 +226,7 @@
       const bitrateSection = document.getElementById('bitrate-section');
       bitrateSection.style.display = (format === 'mp3') ? 'block' : 'none';
     });
+
     document.getElementById('format').dispatchEvent(new Event('change'));
 
     async function fetchDownloadList() {

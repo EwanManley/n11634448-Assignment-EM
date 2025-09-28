@@ -89,7 +89,6 @@
       <h2>Admin Panel</h2>
       <button id="toggle-files-btn">Show Files</button>
       <div class="file-list" id="file-list"></div>
-
       <div class="link-group">
         <a href="/">Back to Home</a>
         <a href="#" id="logout-btn">Logout</a>
@@ -156,7 +155,7 @@
 
       if (res.ok) {
         alert('File deleted');
-        toggleBtn.click(); // refresh list
+        toggleBtn.click();
       } else {
         alert('Failed to delete file');
       }
