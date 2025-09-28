@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Create Account</title>
+  <title>Confirm Email</title>
   <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.0.4/dist/amazon-cognito-identity.min.js"></script>
   <style>
     body {
@@ -29,10 +29,6 @@
       text-align: center;
     }
 
-    h2 {
-      margin-bottom: 20px;
-    }
-
     input, button {
       width: 100%;
       padding: 12px;
@@ -57,47 +53,25 @@
       color: red;
       margin-top: 10px;
     }
-
-    .center-text {
-      margin-top: 10px;
-    }
-
-    .link-group {
-      margin-top: 20px;
-    }
-
-    .link-group a {
-      margin: 0 10px;
-      color: #007bff;
-      text-decoration: none;
-    }
-
-    .link-group a:hover {
-      text-decoration: underline;
-    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="card">
-      <h2>Create Account</h2>
-      <form id="register-form">
-        <input type="text" id="username" placeholder="Email" required />
-        <input type="password" id="password" placeholder="Password" required />
-        <input type="hidden" id="role" value="user" />
-        <button type="submit">Create Account</button>
+      <h2>Verify Your Email</h2>
+      <p>Please enter the verification code sent to your email.</p>
+      <form id="confirm-form">
+        <input type="text" id="code" placeholder="Verification Code" required />
+        <button type="submit">Confirm</button>
       </form>
-
-      <p class="center-text">Want to register as an admin? <a href="/admin-register.html">Click here</a></p>
-
-      <p id="register-error" class="error"></p>
-      <div class="link-group">
-        <a href="/">Back to Login</a>
-      </div>
+      <p id="confirm-error" class="error"></p>
     </div>
   </div>
 
   <script>
+    const urlParams = new URLSearchParams(window.location.search)
+    const email = urlParams.get('email')
+
     const poolData = {
       UserPoolId: 'ap-southeast-2_YuZttYiPL',
       ClientId: '7j53veksj398m8eoblb9g6ce3f'
@@ -105,26 +79,26 @@
 
     const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData)
 
-    document.getElementById('register-form')?.addEventListener('submit', function (e) {
+    document.getElementById('confirm-form')?.addEventListener('submit', function (e) {
       e.preventDefault()
 
-      const username = document.getElementById('username').value
-      const password = document.getElementById('password').value
+      const code = document.getElementById('code').value
 
-      const attributeList = [
-        new AmazonCognitoIdentity.CognitoUserAttribute({
-          Name: 'email',
-          Value: username
-        })
-      ]
+      const userData = {
+        Username: email,
+        Pool: userPool
+      }
 
-      userPool.signUp(username, password, attributeList, null, function (err, result) {
+      const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData)
+
+      cognitoUser.confirmRegistration(code, true, function (err, result) {
         if (err) {
-          document.getElementById('register-error').innerText = err.message || JSON.stringify(err)
+          document.getElementById('confirm-error').innerText = err.message || JSON.stringify(err)
           return
         }
 
-        window.location.href = `/confirm.html?email=${encodeURIComponent(username)}`
+        alert('Email confirmed. You can now log in.')
+        window.location.href = '/'
       })
     })
   </script>

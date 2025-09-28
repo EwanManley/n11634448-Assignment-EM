@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Login</title>
+  <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.0.4/dist/amazon-cognito-identity.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -80,24 +81,40 @@
   </div>
 
   <script>
-    async function handleLogin() {
-      const username = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+    const poolData = {
+      UserPoolId: 'ap-southeast-2_YuZttYiPL',
+      ClientId: '7j53veksj398m8eoblb9g6ce3f'
+    }
 
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
+    const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData)
 
-      const result = await response.json();
+    function handleLogin() {
+      const email = document.getElementById('email').value
+      const password = document.getElementById('password').value
 
-      if (response.ok) {
-        localStorage.setItem('token', result.token);
-        window.location.href = '/upload.html';
-      } else {
-        alert(result.error || 'Login failed');
+      const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
+        Username: email,
+        Password: password
+      })
+
+      const userData = {
+        Username: email,
+        Pool: userPool
       }
+
+      const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData)
+
+      cognitoUser.authenticateUser(authenticationDetails, {
+        onSuccess: function (result) {
+          const token = result.getIdToken().getJwtToken()
+          localStorage.setItem('token', token)
+          window.location.href = '/upload.html'
+        },
+
+        onFailure: function (err) {
+          alert(err.message || JSON.stringify(err))
+        }
+      })
     }
   </script>
 </body>

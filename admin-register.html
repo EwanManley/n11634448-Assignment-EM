@@ -90,8 +90,20 @@
     </div>
   </div>
 
-  <script>
-    document.getElementById('admin-register-form')?.addEventListener('submit', async (e) => {
+  <script type="module">
+    import {
+      CognitoUserPool,
+      CognitoUserAttribute
+    } from 'https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.2.2/+esm'
+
+    const poolData = {
+      UserPoolId: 'ap-southeast-2_YuZttYiPL',
+      ClientId: '7j53veksj398m8eoblb9g6ce3f'
+    }
+
+    const userPool = new CognitoUserPool(poolData)
+
+    document.getElementById('admin-register-form').addEventListener('submit', async (e) => {
       e.preventDefault()
 
       const username = document.getElementById('username').value
@@ -99,26 +111,22 @@
       const adminKey = document.getElementById('admin-key').value
       const error = document.getElementById('register-error')
 
-      const HARD_KEY = 'XUcAHT9CNx2073pLGmZ12OB9bHhrg5Uy'
-      if (adminKey !== HARD_KEY) {
+      if (adminKey !== 'XUcAHT9CNx2073pLGmZ12OB9bHhrg5Uy') {
         error.innerText = 'Invalid admin key'
         return
       }
 
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, role: 'admin', adminKey })
+      const attributeList = [
+        new CognitoUserAttribute({ Name: 'custom:role', Value: 'admin' })
+      ]
+
+      userPool.signUp(username, password, attributeList, null, (err, result) => {
+        if (err) {
+          error.innerText = err.message || 'Registration failed'
+          return
+        }
+        window.location.href = '/confirm.html'
       })
-
-      const data = await res.json()
-
-      if (res.ok) {
-        alert('Admin registration successful. You can now log in.')
-        window.location.href = '/upload.html'
-      } else {
-        error.innerText = data.error || 'Registration failed'
-      }
     })
   </script>
 </body>

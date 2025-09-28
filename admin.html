@@ -98,18 +98,15 @@
   </div>
 
   <script>
-    const token = localStorage.getItem('token');
-    if (!token) {
-      window.location.href = '/upload.html';
-    } else {
-      const decoded = JSON.parse(atob(token.split('.')[1]));
-      if (decoded.role !== 'admin') {
-        window.location.href = '/upload.html';
-      }
+    const token = localStorage.getItem('token')
+    const role = localStorage.getItem('role')
+
+    if (!token || role !== 'admin') {
+      window.location.href = '/upload.html'
     }
 
-    const toggleBtn = document.getElementById('toggle-files-btn');
-    const fileListDiv = document.getElementById('file-list');
+    const toggleBtn = document.getElementById('toggle-files-btn')
+    const fileListDiv = document.getElementById('file-list')
 
     toggleBtn.addEventListener('click', async () => {
       if (fileListDiv.style.display === 'none' || fileListDiv.style.display === '') {
@@ -117,55 +114,56 @@
           headers: {
             Authorization: `Bearer ${token}`
           }
-        });
+        })
 
-        const data = await res.json();
-        fileListDiv.innerHTML = '';
+        const data = await res.json()
+        fileListDiv.innerHTML = ''
 
         if (res.ok && Array.isArray(data.files)) {
           data.files.forEach(file => {
-            const item = document.createElement('div');
-            item.className = 'file-item';
+            const item = document.createElement('div')
+            item.className = 'file-item'
             item.innerHTML = `
               <span>${file.name}</span>
               <button onclick="deleteFile('${file.name}')">Delete</button>
-            `;
-            fileListDiv.appendChild(item);
-          });
+            `
+            fileListDiv.appendChild(item)
+          })
         } else {
-          fileListDiv.innerHTML = '<p>No files found or failed to fetch.</p>';
+          fileListDiv.innerHTML = '<p>No files found or failed to fetch.</p>'
         }
 
-        fileListDiv.style.display = 'block';
-        toggleBtn.textContent = 'Hide Files';
+        fileListDiv.style.display = 'block'
+        toggleBtn.textContent = 'Hide Files'
       } else {
-        fileListDiv.style.display = 'none';
-        toggleBtn.textContent = 'Show Files';
+        fileListDiv.style.display = 'none'
+        toggleBtn.textContent = 'Show Files'
       }
-    });
+    })
 
     async function deleteFile(filename) {
-      if (!confirm(`Are you sure you want to delete ${filename}?`)) return;
+      if (!confirm(`Are you sure you want to delete ${filename}?`)) return
 
       const res = await fetch(`/api/delete/${filename}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`
         }
-      });
+      })
 
       if (res.ok) {
-        alert('File deleted');
-        toggleBtn.click(); // refresh list
+        alert('File deleted')
+        toggleBtn.click()
       } else {
-        alert('Failed to delete file');
+        alert('Failed to delete file')
       }
     }
 
     document.getElementById('logout-btn').addEventListener('click', () => {
-      localStorage.removeItem('token');
-      location.href = '/upload.html';
-    });
+      localStorage.removeItem('token')
+      localStorage.removeItem('role')
+      location.href = '/'
+    })
   </script>
 </body>
 </html>
