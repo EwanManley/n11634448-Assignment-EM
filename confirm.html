@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <title>Confirm Email</title>
-  <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.0.4/dist/amazon-cognito-identity.min.js"></script>
   <style>
     body {
       margin: 0;
@@ -72,34 +71,31 @@
     const urlParams = new URLSearchParams(window.location.search)
     const email = urlParams.get('email')
 
-    const poolData = {
-      UserPoolId: 'ap-southeast-2_YuZttYiPL',
-      ClientId: '7j53veksj398m8eoblb9g6ce3f'
-    }
-
-    const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData)
-
-    document.getElementById('confirm-form')?.addEventListener('submit', function (e) {
+    document.getElementById('confirm-form').addEventListener('submit', async (e) => {
       e.preventDefault()
 
       const code = document.getElementById('code').value
+      const error = document.getElementById('confirm-error')
 
-      const userData = {
-        Username: email,
-        Pool: userPool
-      }
+      try {
+        const response = await fetch('/api/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: email, code })
+        })
 
-      const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData)
+        const result = await response.json()
 
-      cognitoUser.confirmRegistration(code, true, function (err, result) {
-        if (err) {
-          document.getElementById('confirm-error').innerText = err.message || JSON.stringify(err)
+        if (!response.ok) {
+          error.innerText = result.error || 'Confirmation failed'
           return
         }
 
         alert('Email confirmed. You can now log in.')
         window.location.href = '/'
-      })
+      } catch {
+        error.innerText = 'Network error'
+      }
     })
   </script>
 </body>

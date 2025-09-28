@@ -77,7 +77,7 @@
     <div class="card">
       <h2>Register as Admin</h2>
       <form id="admin-register-form">
-        <input type="text" id="username" placeholder="Username" required />
+        <input type="text" id="username" placeholder="Email" required />
         <input type="password" id="password" placeholder="Password" required />
         <input type="text" id="admin-key" placeholder="Admin Key" required />
         <button type="submit">Register as Admin</button>
@@ -90,19 +90,7 @@
     </div>
   </div>
 
-  <script type="module">
-    import {
-      CognitoUserPool,
-      CognitoUserAttribute
-    } from 'https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.2.2/+esm'
-
-    const poolData = {
-      UserPoolId: 'ap-southeast-2_YuZttYiPL',
-      ClientId: '7j53veksj398m8eoblb9g6ce3f'
-    }
-
-    const userPool = new CognitoUserPool(poolData)
-
+  <script>
     document.getElementById('admin-register-form').addEventListener('submit', async (e) => {
       e.preventDefault()
 
@@ -116,17 +104,28 @@
         return
       }
 
-      const attributeList = [
-        new CognitoUserAttribute({ Name: 'custom:role', Value: 'admin' })
-      ]
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username,
+            password,
+            email: username
+          })
+        })
 
-      userPool.signUp(username, password, attributeList, null, (err, result) => {
-        if (err) {
-          error.innerText = err.message || 'Registration failed'
+        const result = await response.json()
+
+        if (!response.ok) {
+          error.innerText = result.error || 'Registration failed'
           return
         }
-        window.location.href = '/confirm.html'
-      })
+
+        window.location.href = `/confirm.html?email=${encodeURIComponent(username)}`
+      } catch (err) {
+        error.innerText = 'Network error'
+      }
     })
   </script>
 </body>

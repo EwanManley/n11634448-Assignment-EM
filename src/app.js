@@ -7,6 +7,7 @@ const AWS = require('aws-sdk')
 const { v4: uuidv4 } = require('uuid')
 const jwt = require('jsonwebtoken')
 const bodyParser = require('body-parser')
+const crypto = require('crypto')
 const authenticateToken = require('./midAuth')
 
 const app = express()
@@ -17,7 +18,15 @@ const BUCKET_NAME = 'n11634448-vt-output'
 
 const COGNITO_POOL_ID = 'ap-southeast-2_YuZttYiPL'
 const COGNITO_CLIENT_ID = '7j53veksj398m8eoblb9g6ce3f'
+const COGNITO_CLIENT_SECRET = '1ahu5q0qb2jf0iipmcnp7dspvrai22sb78fde3gtrfreg1ddg141'
 const cognitoISP = new AWS.CognitoIdentityServiceProvider({ region: 'ap-southeast-2' })
+
+function getSecretHash(username) {
+  return crypto
+    .createHmac('SHA256', COGNITO_CLIENT_SECRET)
+    .update(username + COGNITO_CLIENT_ID)
+    .digest('base64')
+}
 
 app.use(express.json())
 app.use(bodyParser.json())
@@ -40,6 +49,7 @@ app.post('/api/register', async (req, res) => {
       ClientId: COGNITO_CLIENT_ID,
       Username: username,
       Password: password,
+      SecretHash: getSecretHash(username),
       UserAttributes: [
         { Name: 'email', Value: email }
       ]
@@ -59,7 +69,8 @@ app.post('/api/confirm', async (req, res) => {
     await cognitoISP.confirmSignUp({
       ClientId: COGNITO_CLIENT_ID,
       Username: username,
-      ConfirmationCode: code
+      ConfirmationCode: code,
+      SecretHash: getSecretHash(username)
     }).promise()
 
     res.json({ message: 'Email confirmed. You can now log in.' })
@@ -76,7 +87,8 @@ app.post('/api/login', async (req, res) => {
     ClientId: COGNITO_CLIENT_ID,
     AuthParameters: {
       USERNAME: username,
-      PASSWORD: password
+      PASSWORD: password,
+      SECRET_HASH: getSecretHash(username)
     }
   }
 

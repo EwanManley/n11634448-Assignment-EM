@@ -23,7 +23,7 @@ function authenticateToken(req, res, next) {
 
   jwt.verify(token, getKey, {
     algorithms: ['RS256'],
-    issuer: 'https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_YuZttYiPL',
+    issuer: 'https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_YuZttYiPL'
   }, (err, decoded) => {
     if (err) return res.status(403).json({ error: 'Token verification failed', details: err.message })
     req.user = decoded

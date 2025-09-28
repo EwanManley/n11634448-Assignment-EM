@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <title>Create Account</title>
-  <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.0.4/dist/amazon-cognito-identity.min.js"></script>
   <style>
     body {
       margin: 0;
@@ -98,34 +97,31 @@
   </div>
 
   <script>
-    const poolData = {
-      UserPoolId: 'ap-southeast-2_YuZttYiPL',
-      ClientId: '7j53veksj398m8eoblb9g6ce3f'
-    }
-
-    const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData)
-
-    document.getElementById('register-form')?.addEventListener('submit', function (e) {
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
       e.preventDefault()
 
       const username = document.getElementById('username').value
       const password = document.getElementById('password').value
+      const error = document.getElementById('register-error')
 
-      const attributeList = [
-        new AmazonCognitoIdentity.CognitoUserAttribute({
-          Name: 'email',
-          Value: username
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, email: username })
         })
-      ]
 
-      userPool.signUp(username, password, attributeList, null, function (err, result) {
-        if (err) {
-          document.getElementById('register-error').innerText = err.message || JSON.stringify(err)
+        const result = await response.json()
+
+        if (!response.ok) {
+          error.innerText = result.error || 'Registration failed'
           return
         }
 
         window.location.href = `/confirm.html?email=${encodeURIComponent(username)}`
-      })
+      } catch (err) {
+        error.innerText = 'Network error'
+      }
     })
   </script>
 </body>

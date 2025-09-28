@@ -140,8 +140,15 @@
       window.location.href = '/index.html'
     }
 
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    const isAdmin = payload['custom:role'] === 'admin'
+    let payload = null
+    try {
+      payload = JSON.parse(atob(token.split('.')[1]))
+    } catch (e) {
+      localStorage.removeItem('token')
+      window.location.href = '/index.html'
+    }
+
+    const isAdmin = payload?.['custom:role'] === 'admin'
 
     if (isAdmin) {
       document.getElementById('admin-link').style.display = 'inline-block'

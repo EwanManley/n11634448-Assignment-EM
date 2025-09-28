@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Login</title>
-  <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.0.4/dist/amazon-cognito-identity.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -69,6 +68,11 @@
     .login-container button:hover {
       background-color: #555;
     }
+
+    .login-container .error {
+      color: red;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -77,45 +81,36 @@
     <p>Want to create an account? <a href="/register.html">Create a new account here</a></p>
     <input type="email" id="email" placeholder="Email" />
     <input type="password" id="password" placeholder="Password" />
-    <button onclick="handleLogin()">Login Now</button>
+    <button id="login-btn">Login Now</button>
+    <p class="error" id="login-error"></p>
   </div>
 
   <script>
-    const poolData = {
-      UserPoolId: 'ap-southeast-2_YuZttYiPL',
-      ClientId: '7j53veksj398m8eoblb9g6ce3f'
-    }
-
-    const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData)
-
-    function handleLogin() {
+    document.getElementById('login-btn').addEventListener('click', async () => {
       const email = document.getElementById('email').value
       const password = document.getElementById('password').value
+      const error = document.getElementById('login-error')
 
-      const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
-        Username: email,
-        Password: password
-      })
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: email, password })
+        })
 
-      const userData = {
-        Username: email,
-        Pool: userPool
-      }
+        const result = await response.json()
 
-      const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData)
-
-      cognitoUser.authenticateUser(authenticationDetails, {
-        onSuccess: function (result) {
-          const token = result.getIdToken().getJwtToken()
-          localStorage.setItem('token', token)
-          window.location.href = '/upload.html'
-        },
-
-        onFailure: function (err) {
-          alert(err.message || JSON.stringify(err))
+        if (!response.ok) {
+          error.innerText = result.error || 'Login failed'
+          return
         }
-      })
-    }
+
+        localStorage.setItem('token', result.token)
+        window.location.href = '/upload.html'
+      } catch {
+        error.innerText = 'Network error'
+      }
+    })
   </script>
 </body>
 </html>
